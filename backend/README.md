@@ -1,153 +1,134 @@
 # Construction Management Backend API
 
-A robust Node.js/Express.js backend API for construction project management, designed to work seamlessly with the existing frontend codebase.
+A robust FastAPI backend for construction project management, designed to work seamlessly with the existing frontend codebase.
 
 ## Features
 
 - **Authentication & Authorization**: JWT-based authentication with role-based access control
-- **Database Support**: Flexible support for both MongoDB and MySQL databases
+- **Database**: PostgreSQL with SQLAlchemy ORM and Alembic migrations
 - **RESTful APIs**: Comprehensive API endpoints for users, projects, and authentication
-- **Security**: Rate limiting, CORS, helmet protection, input validation
-- **Testing**: Unit and integration tests with Jest
-- **Error Handling**: Centralized error handling with detailed logging
-- **Validation**: Request validation using Joi schemas
-- **Documentation**: Well-documented API endpoints
+- **Security**: JWT tokens, password hashing with bcrypt, CORS protection
+- **Data Validation**: Request/response validation using Pydantic schemas
+- **Documentation**: Auto-generated API documentation with FastAPI
+- **Migration Support**: Database schema management with Alembic
 
 ## Tech Stack
 
-- **Runtime**: Node.js (>=18.0.0)
-- **Framework**: Express.js
-- **Databases**: MongoDB (with Mongoose) / MySQL
-- **Authentication**: JWT (JSON Web Tokens)
-- **Validation**: Joi
-- **Testing**: Jest + Supertest
-- **Security**: Helmet, CORS, bcryptjs, express-rate-limit
+- **Runtime**: Python 3.8+
+- **Framework**: FastAPI
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Authentication**: JWT (JSON Web Tokens) with python-jose
+- **Validation**: Pydantic schemas
+- **Migrations**: Alembic
+- **Security**: Passlib with bcrypt, CORS middleware
 
 ## Project Structure
 
 ```
 backend/
-├── src/
-│   ├── app.js              # Express app configuration
-│   ├── controllers/        # Request handlers
-│   │   ├── authController.js
-│   │   ├── userController.js
-│   │   └── projectController.js
-│   ├── models/             # Database models
-│   │   ├── User.js         # MongoDB user model
-│   │   ├── Project.js      # MongoDB project model
-│   │   └── UserMySQL.js    # MySQL user model
-│   ├── routes/             # API routes
-│   │   ├── authRoutes.js
-│   │   ├── userRoutes.js
-│   │   └── projectRoutes.js
-│   ├── middleware/         # Custom middleware
-│   │   ├── auth.js         # Authentication middleware
-│   │   ├── validation.js   # Validation middleware
-│   │   ├── errorHandler.js # Error handling
-│   │   └── notFound.js     # 404 handler
-│   ├── config/             # Configuration files
-│   │   ├── index.js        # Main config
-│   │   ├── mongodb.js      # MongoDB connection
-│   │   └── mysql.js        # MySQL connection
-│   └── utils/              # Utility functions
-│       └── helpers.js      # Helper functions
-├── tests/                  # Test files
-│   ├── unit/              # Unit tests
-│   ├── integration/       # Integration tests
-│   └── setup.js           # Test setup
-├── server.js              # Server entry point
-├── package.json           # Dependencies
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI app configuration
+│   ├── core/                # Core utilities
+│   │   ├── config.py        # Application configuration
+│   │   └── security.py      # JWT and password utilities
+│   ├── db/                  # Database layer
+│   │   ├── base.py          # Base class for Alembic
+│   │   └── session.py       # SQLAlchemy session
+│   ├── models/              # SQLAlchemy models
+│   │   ├── user.py          # User model
+│   │   └── project.py       # Project models
+│   ├── schemas/             # Pydantic schemas
+│   │   ├── user.py          # User request/response schemas
+│   │   └── project.py       # Project request/response schemas
+│   └── api/                 # API routes
+│       ├── deps.py          # Dependencies (auth, db)
+│       └── routes/          # API route handlers
+│           ├── auth.py      # Authentication endpoints
+│           ├── users.py     # User management endpoints
+│           └── projects.py  # Project management endpoints
+├── alembic/                 # Database migrations
+│   ├── env.py              # Alembic environment
+│   ├── script.py.mako      # Migration template
+│   └── versions/           # Migration files
+├── alembic.ini             # Alembic configuration
+├── requirements.txt        # Python dependencies
 ├── .env.example           # Environment template
-└── README.md             # This file
+└── README.md              # This file
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (>=18.0.0)
-- npm or yarn
-- MongoDB or MySQL database
+- Python 3.8 or higher
+- PostgreSQL database
+- pip (Python package manager)
 
 ### Installation
 
-1. **Install dependencies**:
+1. **Clone and navigate to backend**:
    ```bash
    cd backend
-   npm install
    ```
 
-2. **Environment setup**:
+2. **Create virtual environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Environment setup**:
    ```bash
    cp .env.example .env
    ```
    
    Edit `.env` and configure your environment variables:
    ```env
-   NODE_ENV=development
+   ENVIRONMENT=development
    PORT=5000
    FRONTEND_URL=http://localhost:3000
    JWT_SECRET=your-super-secret-jwt-key
    JWT_REFRESH_SECRET=your-super-secret-refresh-key
-   
-   # For MongoDB
-   MONGODB_URI=mongodb://localhost:27017/constructio_db
-   
-   # OR for MySQL
-   MYSQL_HOST=localhost
-   MYSQL_USER=your_user
-   MYSQL_PASSWORD=your_password
-   MYSQL_DATABASE=constructio_db
+   DATABASE_URL=postgresql://user:password@localhost/constructio_db
    ```
 
-3. **Database setup**:
+5. **Database setup**:
    
-   **For MongoDB:**
-   - Make sure MongoDB is running
-   - The database and collections will be created automatically
+   Create the PostgreSQL database:
+   ```sql
+   CREATE DATABASE constructio_db;
+   ```
 
-   **For MySQL:**
-   - Create the database: `CREATE DATABASE constructio_db;`
-   - Tables will be created automatically when the server starts
+6. **Run migrations**:
+   ```bash
+   alembic upgrade head
+   ```
 
 ### Running the Application
 
 **Development mode:**
 ```bash
-npm run dev
+uvicorn app.main:app --reload --port 5000
 ```
 
 **Production mode:**
 ```bash
-npm start
+uvicorn app.main:app --host 0.0.0.0 --port 5000
 ```
 
-The server will start on `http://localhost:5000` (or your configured PORT).
+The server will start on `http://localhost:5000`.
 
-### Testing
+### API Documentation
 
-**Run all tests:**
-```bash
-npm test
-```
-
-**Run tests in watch mode:**
-```bash
-npm run test:watch
-```
-
-**Run tests with coverage:**
-```bash
-npm run test:coverage
-```
-
-### Linting
-
-```bash
-npm run lint
-npm run lint:fix
-```
+- **Interactive docs**: `http://localhost:5000/docs`
+- **ReDoc**: `http://localhost:5000/redoc`
+- **Health check**: `http://localhost:5000/health`
 
 ## API Endpoints
 
@@ -160,21 +141,21 @@ npm run lint:fix
 
 ### Users
 - `GET /api/users` - Get all users (Manager/Admin only)
-- `GET /api/users/:id` - Get user by ID
-- `PUT /api/users/:id` - Update user
-- `DELETE /api/users/:id` - Delete user (Admin only)
-- `PUT /api/users/:id/role` - Update user role (Admin only)
-- `GET /api/users/role/:role` - Get users by role
+- `GET /api/users/{id}` - Get user by ID
+- `PUT /api/users/{id}` - Update user
+- `DELETE /api/users/{id}` - Delete user (Admin only)
+- `PUT /api/users/{id}/role` - Update user role (Admin only)
+- `GET /api/users/role/{role}` - Get users by role
 
-### Projects (MongoDB only)
+### Projects
 - `GET /api/projects` - Get all projects
-- `GET /api/projects/:id` - Get project by ID
+- `GET /api/projects/{id}` - Get project by ID
 - `POST /api/projects` - Create new project (Manager/Admin only)
-- `PUT /api/projects/:id` - Update project
-- `DELETE /api/projects/:id` - Delete project
-- `POST /api/projects/:id/team` - Add team member
-- `DELETE /api/projects/:id/team/:userId` - Remove team member
-- `GET /api/projects/status/:status` - Get projects by status
+- `PUT /api/projects/{id}` - Update project
+- `DELETE /api/projects/{id}` - Delete project
+- `POST /api/projects/{id}/team` - Add team member
+- `DELETE /api/projects/{id}/team/{userId}` - Remove team member
+- `GET /api/projects/status/{status}` - Get projects by status
 
 ### Health Check
 - `GET /health` - Server health status
@@ -185,15 +166,31 @@ npm run lint:fix
 - **manager**: Can manage projects and users
 - **admin**: Full system access
 
+## Database Migrations
+
+### Create a new migration
+```bash
+alembic revision --autogenerate -m "Description of changes"
+```
+
+### Apply migrations
+```bash
+alembic upgrade head
+```
+
+### Downgrade migrations
+```bash
+alembic downgrade -1
+```
+
 ## Security Features
 
-- **JWT Authentication**: Secure token-based authentication
+- **JWT Authentication**: Secure token-based authentication with refresh tokens
 - **Password Hashing**: bcrypt with configurable rounds
-- **Rate Limiting**: Prevents API abuse
 - **CORS Protection**: Configurable cross-origin requests
-- **Helmet**: Security headers
-- **Input Validation**: Joi schema validation
-- **SQL Injection Protection**: Parameterized queries
+- **Role-based Access**: Fine-grained permission control
+- **Input Validation**: Pydantic schema validation
+- **SQL Injection Protection**: SQLAlchemy ORM with parameterized queries
 
 ## Error Handling
 
@@ -203,7 +200,7 @@ The API uses standardized error responses:
 {
   "success": false,
   "message": "Error description",
-  "errors": [...] // Validation errors if applicable
+  "detail": "Additional error details"
 }
 ```
 
@@ -211,27 +208,31 @@ The API uses standardized error responses:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NODE_ENV` | Environment mode | `development` |
+| `ENVIRONMENT` | Environment mode | `development` |
 | `PORT` | Server port | `5000` |
 | `FRONTEND_URL` | Frontend URL for CORS | `http://localhost:3000` |
 | `JWT_SECRET` | JWT signing secret | Required |
-| `JWT_EXPIRE` | JWT expiration time | `7d` |
+| `JWT_EXPIRE_MINUTES` | JWT expiration time | `10080` (7 days) |
 | `JWT_REFRESH_SECRET` | Refresh token secret | Required |
-| `JWT_REFRESH_EXPIRE` | Refresh token expiration | `30d` |
-| `MONGODB_URI` | MongoDB connection string | Optional |
-| `MYSQL_HOST` | MySQL host | Optional |
-| `MYSQL_USER` | MySQL username | Optional |
-| `MYSQL_PASSWORD` | MySQL password | Optional |
-| `MYSQL_DATABASE` | MySQL database name | Optional |
+| `JWT_REFRESH_EXPIRE_MINUTES` | Refresh token expiration | `43200` (30 days) |
+| `DATABASE_URL` | PostgreSQL connection string | Required |
 | `BCRYPT_ROUNDS` | Password hashing rounds | `12` |
 
-## Contributing
+## Development
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### Code Structure
+- Models use SQLAlchemy ORM with proper relationships
+- Schemas use Pydantic for validation and serialization
+- Routes are organized by feature (auth, users, projects)
+- Dependencies handle authentication and database sessions
+- Response format matches existing frontend expectations
+
+### Adding New Features
+1. Create/update models in `app/models/`
+2. Create/update schemas in `app/schemas/`
+3. Add route handlers in `app/api/routes/`
+4. Generate migration with `alembic revision --autogenerate`
+5. Apply migration with `alembic upgrade head`
 
 ## License
 

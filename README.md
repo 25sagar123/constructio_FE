@@ -1,6 +1,6 @@
 # Construction Management System
 
-This is a full-stack construction management system built with Next.js frontend and Node.js/Express.js backend.
+This is a full-stack construction management system built with Next.js frontend and FastAPI backend.
 
 ## Project Structure
 
@@ -11,17 +11,17 @@ constructio_FE/
 │   ├── public/            # Static assets
 │   ├── package.json       # Frontend dependencies
 │   └── ...
-└── backend (Node.js/Express.js)
-    ├── src/               # Backend source code
-    │   ├── controllers/   # Request handlers
-    │   ├── models/        # Database models
-    │   ├── routes/        # API routes
-    │   ├── middleware/    # Custom middleware
-    │   ├── config/        # Configuration
-    │   └── utils/         # Utilities
-    ├── tests/             # Test files
-    ├── server.js          # Server entry point
-    └── package.json       # Backend dependencies
+└── backend (FastAPI/Python)
+    ├── app/               # FastAPI application
+    │   ├── main.py        # FastAPI app configuration
+    │   ├── core/          # Core utilities (config, security)
+    │   ├── db/            # Database layer (SQLAlchemy)
+    │   ├── models/        # SQLAlchemy models
+    │   ├── schemas/       # Pydantic schemas
+    │   └── api/           # API routes and dependencies
+    ├── alembic/           # Database migrations
+    ├── requirements.txt   # Python dependencies
+    └── README.md          # Backend documentation
 ```
 
 ## Getting Started
@@ -46,14 +46,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Backend (Node.js/Express.js)
+### Backend (FastAPI/Python)
 
 Navigate to the backend directory and start the server:
 
 ```bash
 cd backend
-npm install
-npm run dev
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your database credentials
+alembic upgrade head  # Run database migrations
+uvicorn app.main:app --reload --port 5000
 ```
 
 The backend server will start on [http://localhost:5000](http://localhost:5000).
@@ -61,29 +64,41 @@ The backend server will start on [http://localhost:5000](http://localhost:5000).
 #### Backend Features
 
 - **Authentication**: JWT-based authentication with refresh tokens
-- **Database Support**: MongoDB, MySQL, or in-memory storage
+- **Database**: PostgreSQL with SQLAlchemy ORM and Alembic migrations
 - **API Endpoints**: RESTful APIs for users, projects, and authentication
-- **Security**: Rate limiting, CORS, helmet protection, input validation
-- **Testing**: Comprehensive unit and integration tests
-- **Documentation**: Well-documented API endpoints
+- **Security**: JWT tokens, password hashing with bcrypt, CORS protection
+- **Data Validation**: Pydantic schemas for request/response validation
+- **Documentation**: Auto-generated API docs with FastAPI
+- **Migration Support**: Database schema management with Alembic
 
 #### API Documentation
 
+- **Interactive Docs**: `http://localhost:5000/docs`
+- **ReDoc**: `http://localhost:5000/redoc`
 - **Health Check**: `GET /health`
 - **API Info**: `GET /api`
 - **Authentication**: 
   - `POST /api/auth/register` - Register new user
   - `POST /api/auth/login` - Login user
-  - `GET /api/auth/profile` - Get user profile
+  - `POST /api/auth/refresh` - Refresh access token
   - `POST /api/auth/logout` - Logout user
+  - `GET /api/auth/profile` - Get user profile
 - **Users**: 
   - `GET /api/users` - Get all users
-  - `GET /api/users/:id` - Get user by ID
-  - `PUT /api/users/:id` - Update user
+  - `GET /api/users/{id}` - Get user by ID
+  - `PUT /api/users/{id}` - Update user
+  - `DELETE /api/users/{id}` - Delete user
+  - `PUT /api/users/{id}/role` - Update user role
+  - `GET /api/users/role/{role}` - Get users by role
 - **Projects**: 
   - `GET /api/projects` - Get all projects
   - `POST /api/projects` - Create new project
-  - `GET /api/projects/:id` - Get project by ID
+  - `GET /api/projects/{id}` - Get project by ID
+  - `PUT /api/projects/{id}` - Update project
+  - `DELETE /api/projects/{id}` - Delete project
+  - `POST /api/projects/{id}/team` - Add team member
+  - `DELETE /api/projects/{id}/team/{userId}` - Remove team member
+  - `GET /api/projects/status/{status}` - Get projects by status
 
 For detailed API documentation, see [backend/README.md](backend/README.md).
 
@@ -100,7 +115,26 @@ cd backend
 cp .env.example .env
 ```
 
-Edit the `.env` file with your database credentials and other configuration.
+Edit the `.env` file with your database credentials and other configuration:
+
+```env
+ENVIRONMENT=development
+PORT=5000
+FRONTEND_URL=http://localhost:3000
+JWT_SECRET=your-super-secret-jwt-key
+JWT_REFRESH_SECRET=your-super-secret-refresh-key
+DATABASE_URL=postgresql://user:password@localhost/constructio_db
+```
+
+Set up the PostgreSQL database:
+```sql
+CREATE DATABASE constructio_db;
+```
+
+Run database migrations:
+```bash
+alembic upgrade head
+```
 
 ## Testing
 
@@ -113,10 +147,18 @@ npm run lint   # Run ESLint
 ### Backend
 ```bash
 cd backend
-npm test                # Run all tests
-npm run test:watch      # Run tests in watch mode
-npm run test:coverage   # Run tests with coverage
-npm run lint            # Run ESLint
+pip install -r requirements.txt  # Install dependencies
+alembic upgrade head              # Run migrations
+uvicorn app.main:app --reload     # Start development server
+```
+
+Available commands:
+```bash
+make install                      # Install dependencies
+make dev                         # Start development server
+make migrate MSG="message"       # Create migration
+make upgrade                     # Apply migrations
+make docker-up                   # Start with Docker
 ```
 
 ## Technologies Used
@@ -128,13 +170,13 @@ npm run lint            # Run ESLint
 - Tailwind CSS
 
 ### Backend
-- Node.js
-- Express.js
+- Python 3.8+
+- FastAPI
+- SQLAlchemy with PostgreSQL
 - JWT Authentication
-- MongoDB/MySQL/In-Memory Database
-- Jest Testing Framework
-- Joi Validation
-- bcryptjs for password hashing
+- Alembic Migrations
+- Pydantic Validation
+- Passlib with bcrypt
 
 ## Learn More
 

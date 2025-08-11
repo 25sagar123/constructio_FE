@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: constructio_user
+      POSTGRES_PASSWORD: constructio_pass
+      POSTGRES_DB: constructio_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - constructio_network
+
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql://constructio_user:constructio_pass@postgres:5432/constructio_db
+      FRONTEND_URL: http://localhost:3000
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_REFRESH_SECRET: your-super-secret-refresh-key
+    depends_on:
+      - postgres
+    networks:
+      - constructio_network
+    volumes:
+      - .:/app
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload"
+
+volumes:
+  postgres_data:
+
+networks:
+  constructio_network:
+    driver: bridge

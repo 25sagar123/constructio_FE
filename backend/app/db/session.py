@@ -9,6 +9,9 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 
+# Base class for models
+Base = declarative_base()
+
 # Create SQLAlchemy engine
 engine = create_engine(
     settings.DATABASE_URL,
@@ -18,9 +21,6 @@ engine = create_engine(
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Base class for models
-Base = declarative_base()
 
 
 def get_db():
